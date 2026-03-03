@@ -21,14 +21,18 @@ const seed = async () => {
     await db.query("TRUNCATE TABLE users");
     await db.query("SET FOREIGN_KEY_CHECKS = 1");
 
-    // Principal
+    // ======================
+    // PRINCIPAL
+    // ======================
     const principalPass = await bcrypt.hash("principal123", 10);
     await db.query(
       "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
       ["principal", principalPass, "principal"]
     );
 
-    // Admins
+    // ======================
+    // ADMINS
+    // ======================
     const adminUsernames = [
       "cs_lab_admin","ds_lab_admin","ai_lab_admin","eee_lab_admin","ec_lab_admin","me_lab_admin",
       "pta_admin","bus_admin","sports_admin","placement_admin","canteen_admin",
@@ -68,21 +72,25 @@ const seed = async () => {
 
         const studentId = studentResult.insertId;
 
-        for (let dep of adminDepartments) {
+        const fullNoDues = counter === 1 || counter === 2;
+
+        for (let i = 0; i < adminDepartments.length; i++) {
 
           let amount;
           let status;
-          let paymentMode = "offline";
 
-          const random = Math.random();
+          // 🔹 ALWAYS start payment_mode as NULL
+          let paymentMode = null;
 
-          if (random < 0.3) {
+          if (fullNoDues) {
             amount = 0;
-            status = "cleared";
-          } else if (random < 0.5) {
-            amount = Math.floor(Math.random() * 3000) + 1000;
-            status = "cleared";
-          } else {
+            status = "no_dues";
+          }
+          else if (i < 5) {
+            amount = 0;
+            status = "no_dues";
+          }
+          else {
             amount = Math.floor(Math.random() * 3000) + 1000;
             status = "pending";
           }
@@ -91,7 +99,7 @@ const seed = async () => {
             `INSERT INTO dues 
              (student_id, department, amount, status, payment_mode, semester)
              VALUES (?, ?, ?, ?, ?, ?)`,
-            [studentId, dep, amount, status, paymentMode, sem]
+            [studentId, adminDepartments[i], amount, status, paymentMode, sem]
           );
         }
 

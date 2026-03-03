@@ -134,15 +134,21 @@ const AdminDashboard = () => {
                 <td>Sem {d.current_semester}</td>
                 <td>₹{d.amount}</td>
 
-                <td>
-                  <span className={
-                    d.payment_mode === "online"
-                      ? "text-blue-600 dark:text-blue-400 font-semibold"
-                      : "text-orange-500 dark:text-orange-400 font-semibold"
-                  }>
-                    {d.payment_mode === "online" ? "Online" : "Manual"}
-                  </span>
-                </td>
+               <td>
+  <span className={
+    d.payment_mode === "online"
+      ? "text-blue-600 dark:text-blue-400 font-semibold"
+      : d.payment_mode === "offline"
+      ? "text-orange-500 dark:text-orange-400 font-semibold"
+      : "text-gray-400"
+  }>
+    {d.payment_mode === "online"
+      ? "Online"
+      : d.payment_mode === "offline"
+      ? "Offline"
+      : "-"}
+  </span>
+</td>
 
                 <td>
                   <span className={

@@ -14,16 +14,29 @@ const NotificationBell = () => {
     notificationSoundRef.current = new Audio("/notification.mp3");
 
     const fetchNotifications = async () => {
-      const data = await authorizedFetch("notifications");
+      try {
+        const data = await authorizedFetch("notifications");
 
-      const newUnread = data.filter(n => !n.is_read).length;
+        // 🔒 SAFETY CHECK — ensure array
+        const safeData = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.notifications)
+          ? data.notifications
+          : [];
 
-      if (newUnread > previousUnreadRef.current) {
-        notificationSoundRef.current.play().catch(() => {});
+        const newUnread = safeData.filter(n => !n.is_read).length;
+
+        if (newUnread > previousUnreadRef.current) {
+          notificationSoundRef.current.play().catch(() => {});
+        }
+
+        previousUnreadRef.current = newUnread;
+        setNotifications(safeData);
+
+      } catch (error) {
+        console.error("Notification fetch error:", error);
+        setNotifications([]);
       }
-
-      previousUnreadRef.current = newUnread;
-      setNotifications(data);
     };
 
     fetchNotifications();
@@ -37,12 +50,23 @@ const NotificationBell = () => {
   }, []);
 
   const markAsRead = async (id) => {
-    await authorizedFetch(`notifications/read/${id}`, "PUT");
+    try {
+      await authorizedFetch(`notifications/read/${id}`, "PUT");
 
-    // refresh after marking
-    const updated = await authorizedFetch("notifications");
-    setNotifications(updated);
-    previousUnreadRef.current = updated.filter(n => !n.is_read).length;
+      const updated = await authorizedFetch("notifications");
+
+      const safeUpdated = Array.isArray(updated)
+        ? updated
+        : Array.isArray(updated?.notifications)
+        ? updated.notifications
+        : [];
+
+      setNotifications(safeUpdated);
+      previousUnreadRef.current = safeUpdated.filter(n => !n.is_read).length;
+
+    } catch (error) {
+      console.error("Mark as read failed:", error);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
